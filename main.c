@@ -84,6 +84,7 @@ inline long long unsigned int Read_Data_And_Search(char* buffer) {
     int rid = 0;
     int cur = 0;
     int ret =0;
+    int count = 0;
     long long unsigned int diff_time,total;
     struct timespec start,end;
     while (1) {
@@ -109,9 +110,14 @@ inline long long unsigned int Read_Data_And_Search(char* buffer) {
         diff_time = BILLION * (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec);
         total += diff_time;
         if(ret == -1)
+        {
+          //  printf("new_key: %d\n",new_key);
+            count++;
             continue;
+        }
 
     }
+   // printf("Count : %d\n",count);
     free(buffer);
     buffer = NULL;
     return total;
@@ -252,7 +258,7 @@ void MainLoop() {
                         diff_time = BILLION * (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec);
                         total += diff_time;
 
-                        BPlusTree_Print();
+                      //  BPlusTree_Print();
 
                         printf("Valid Records inserted on B+tree = %d\n", validRecords);
                         printf("Total number of B+tree nodes = %d\n", BPlusTree_GetTotalNodes());
