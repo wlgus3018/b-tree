@@ -7,7 +7,7 @@
 
 struct BPlusTreeNode* Root;
 int split_count = 0;
-int MaxChildNumber = 5;
+int MaxChildNumber = 29;
 int TotalNodes;
 
 int QueryAnsNum;
@@ -33,6 +33,8 @@ inline int Binary_Search(BPlusTreeNode* Cur, int key) {
 	if (Cur->key[r - 1] <= key) return r - 1;
 	while (l < r - 1) {
 		int mid = (l + r) >> 1;
+                
+                
 		if (Cur->key[mid] > key)
 			r = mid;
 		else
@@ -189,32 +191,85 @@ void Merge_Node(BPlusTreeNode *Cur,int key,void *value)
     int i, ins,u;
     int t;
     //    printf("ins : %d\n",ins);
-
     if (key < Cur->key[0]) ins = 0; else ins = Binary_Search(Cur, key) + 1;
-    for (i = Cur->key_num; i > ins; i--) {
-        Cur->key[i] = Cur->key[i - 1];
-        Cur->child[i] = Cur->child[i - 1];
+
+    if(Cur->isLeaf)
+    {
+        for (i = Cur->key_num; i >ins; i--) {
+            Cur->key[i] = Cur->key[i-1];
+            Cur->child[i] = Cur->child[i-1];
+        }
+        Cur->key_num++;
+        Cur->key[ins] = key;
+        Cur->child[ins] = value;
+        //     printf("key: %d\n",key);
+        //   printf("key[0]: %d\n",Cur->key[0]);
+        //printf("ins : %d\n",ins);
     }
-    Cur->key_num++;
-    Cur->key[ins] = key;
-    Cur->child[ins] = value;
+    else
+    {
 
+        //  printf("ins : %d\n",ins);
+        //ins--;
+        /*
+           if(Cur->key_num == 1)
+           {
+           ins--;
+           }*/
 
+        //      printf("here\n");
+        //    printf("Cur->key_num: %d\n",Cur->key_num);
+        //  printf("key: %d\n",key);
+        
+        BPlusTreeNode *child = Cur->child[ins];
+        if(ins == 0 && child->key[0] >= key)
+        {
+            for (i = Cur->key_num; i >ins; i--) {
+                Cur->key[i] = Cur->key[i-1];
+                Cur->child[i+1] = Cur->child[i];
+            }
+            Cur->child[i+1] = Cur->child[i];
+            Cur->child[0] = value; 
+            Cur->key_num++;
+            Cur->key[ins] = key;
+        }
 
-
-
-
-
+        else
+        {
+        for (i = Cur->key_num; i >ins; i--) {
+            Cur->key[i] = Cur->key[i-1];
+            Cur->child[i+1] = Cur->child[i];
+        }
+      //  printf("i :%d\n",i);
+        Cur->key_num++;
+        Cur->key[ins] = key;
+        Cur->child[ins+1] = value;
+        }
     }
+
+
+
+
+
+
+
+
+
+}
 unsigned int Finding_Moving_Child(BPlusTreeNode *father, BPlusTreeNode *Cur)
 {
-    int index = Binary_Search(father,Cur->key[0]);
+    int index;
 
- //   printf("Finding index : %d\n",index);
+
+    index = Binary_Search(father,Cur->key[0]);
+    
+
+ //   printf("Finding index : %d\n",index;
   //  printf("Cur->key : %d\n",Cur->key[Cur->slot_array[1]]);
 
-    BPlusTreeNode *temp = Cur->child[0];
    // printf("temp:%d\n",temp->key[temp->slot_array[1]]);
+
+   
     while(1)
     {
         
@@ -242,29 +297,44 @@ unsigned int Finding_Moving_Child(BPlusTreeNode *father, BPlusTreeNode *Cur)
 void Re_Delete(BPlusTreeNode *Cur, int key)
 {
     int ins;
-    int bit_pos = 0;
     int i;
     //WBPlusTreeNode *temp = New_WBPlusTreeNode();
 
 
     ins = Binary_Search(Cur,key);
     //printf("Cal Redelete\n");
-    int j; 
     
     /*for(j = 0; j<Cur->key_num; j++)
     {
         printf("Cur->key[%d] : %d\n",j,Cur->key[Cur->slot_array[j+1]]);
     }*/
-
+   // printf("Cur->key_num : %d\n",Cur->key_num);
    // printf("ins: %d\n",ins);
-    //printf("key: %d\n",key);
+   // printf("cur->key[0]: %d\n",Cur->key[0]);
+   // printf("key: %d\n",key);
+
+    if(Cur->isLeaf== false)
+    {
+                
+        for(i=ins; i<Cur->key_num-1; i++)
+        {
+          //  printf("hihihihi\n");
+            Cur->key[i] = Cur->key[i+1];
+            Cur->child[i+1] = Cur->child[i+2];
+        }
+    Cur->key_num = Cur->key_num - 1;
+
+    }
+    else
+    {
     
-    for(i=ins; i<Cur->key_num; i++)
+    for(i=ins; i<Cur->key_num-1; i++)
     {
         Cur->key[i] = Cur->key[i+1];
+        //Cur->child[i] = Cur->child[i+2];
     }
     Cur->key_num = Cur->key_num - 1;
-    
+    }
 
     /* clear slot_aray == 0
        if(Cur->key_num == 0)
@@ -272,7 +342,13 @@ void Re_Delete(BPlusTreeNode *Cur, int key)
        Cur->slot_array[i-1] = 0;
 
        }*/
-
+    /*
+    printf("================================================\n");
+    printf("Cur->key[0]: %d\n",Cur->key[0]);
+         printf("Cur->child[0] : %p\n",Cur->child[0]);
+         printf("Cur->child[1] : %p\n",Cur->child[1]);
+    printf("================================================\n");
+    */
 }
 BPlusTreeNode* Find_Child(BPlusTreeNode* Cur, int key){
 
@@ -286,11 +362,10 @@ BPlusTreeNode* Find_Child(BPlusTreeNode* Cur, int key){
     else
     {
         //printf("Child not 0!\n");
-        return Cur->child[index];
+        return Cur->child[index+1];
     }
 
 }
-
 void Delete(BPlusTreeNode *Cur, int key){
    
     int ins;
@@ -307,16 +382,16 @@ void Delete(BPlusTreeNode *Cur, int key){
     {
         printf("Root!!\n");
     }*/
-    for(i = ins; i<Cur->key_num; i++)
+     for(i = ins; i<Cur->key_num-1; i++)
     {
-        Cur->key[ins] = Cur->key[ins+1];
-        Cur->child[ins] = Cur->child[ins+1];
+        Cur->key[i] = Cur->key[i+1];
+        Cur->child[i] = Cur->child[i+1];
     }
   
   Cur->key_num = Cur->key_num - 1;
     //Cur->slot_array[i+1] = 0;
         
-    if(ins == 1 && !Cur->isRoot){
+    if(ins == 0 && !Cur->isRoot){
 //        printf("Normal ins : %d\n",ins);
 
         BPlusTreeNode *temp;
@@ -348,7 +423,6 @@ void Delete(BPlusTreeNode *Cur, int key){
             }
                 temp = temp->father;
         }
-
     }
 
 
@@ -386,10 +460,10 @@ void Delete(BPlusTreeNode *Cur, int key){
 
             if(Cur->key_num <=1 && !Cur->isRoot)
             {
-            //    printf("Upper!\n");
+           //     printf("Upper!\n");
                 if(Redistribute(Cur) == false)
                 {
-              //      printf("Non-leaf merge!!\n");
+             //       printf("Non-leaf merge!!\n");
                     Merge(Cur);
                 }
 
@@ -424,13 +498,24 @@ void Delete(BPlusTreeNode *Cur, int key){
 int Merge(BPlusTreeNode *Cur)
 {
     BPlusTreeNode *father = Cur->father;
-    int index = Binary_Search(father,Cur->key[0]);
-    int j,temp,Move_key,Root_up_key;
+    int j,temp,Move_key,Root_up_key,index;
+
     BPlusTreeNode *next,*prev,*t;
 
+    if(Cur->key[0] < father->key[0])
+    {
+        index = 0;
+    }
+    else
+    {
+    index = Binary_Search(father,Cur->key[0])+1;
+    }
+   // printf("Merge index : %d\n",index);
     if(Cur->isLeaf == false)
     {
-        if(index == 0){
+     //           printf("Non leaf merge!!\n");
+        if(index == 0)
+        {
 
 
                 //printf("Non leaf merge!!\n");
@@ -444,8 +529,8 @@ int Merge(BPlusTreeNode *Cur)
                 for(j=0; j < next->key_num; j++)
                 {
 
-                    Merge_Node(Cur,next->key[j],next->child[j]);
-                    t = next->child[j];
+                    Merge_Node(Cur,next->key[j],next->child[j+1]);
+                    t = next->child[j+1];
                     t->father = Cur;
                 }
                 Move_key = Finding_Moving_Child(father,next);
@@ -460,15 +545,15 @@ int Merge(BPlusTreeNode *Cur)
                 
                 //Debug_Print(Cur);
                 /*Adjusting Cur child Postion in Non_leaf*/
-                Move_key = Finding_Moving_Child(father,Cur);
-                child = Find_Child(father,Move_key);
-                Merge_Node(father,Move_key,child);
-                Re_Delete(father,Move_key);
-                child->father = father;
-                /************************/
-
+                /*
+                   Move_key = Finding_Moving_Child(father,Cur);
+                   child = Find_Child(father,Move_key);
+                   Merge_Node(father,Move_key,child);
+                   Re_Delete(father,Move_key);
+                   child->father = father;
+                   */
                 //Debug_Print(Cur);
-                
+
 
 
                 
@@ -485,7 +570,7 @@ int Merge(BPlusTreeNode *Cur)
                     //printf("t->key[0]: %d\n",t->key[t->slot_array[1]]);
            
                  //   Debug_Print(Cur);
-                    Root = father->child[0];
+                    Root = t;
                     
                     Root->isRoot = true;
                     Root->father = NULL;
@@ -500,7 +585,7 @@ int Merge(BPlusTreeNode *Cur)
     {
         //printf("hi3\n");
         //printf("Non leaf merge!!\n");
-        if(index == 1)
+        if(index == 0)
         {
             prev = father->child[0];
         }
@@ -516,11 +601,12 @@ int Merge(BPlusTreeNode *Cur)
 
         //printf("what is t : %p\n",Cur->child[Cur->slot_array[1]+1]);
 
-        Merge_Node(prev,Cur->key[0],Cur->child[0]);
+        Merge_Node(prev,Cur->key[0],Cur->child[1]);
+       //  printf("Cur->child[0] : %p\n",Cur->child[0]);
+       // printf("Cur->child[1] : %p\n",Cur->child[1]);
 
-        t = Cur->child[0];
+        t = Cur->child[1];
         t->father = prev;
-
      //   Debug_Print(prev);
        // Debug_Print(Cur);
         Move_key = Finding_Moving_Child(father,Cur);
@@ -557,7 +643,7 @@ int Merge(BPlusTreeNode *Cur)
         else
         {   //printf("hi2\n"); 
             //printf("Non leaf merge!!\n");
-            if(index == 1)
+            if(index == 0)
             {
                 prev = father->child[0];
             }
@@ -571,51 +657,44 @@ int Merge(BPlusTreeNode *Cur)
             //printf("prev :%d\n",prev->key[prev->slot_array[1]]);
             //printf("next :%d\n",next->key[next->slot_array[1]]);
 
+/*
+            if(prev->key_num <=2 &&prev->key_num < next->key_num)
+            {
+                printf("Come here impossible\n");
+                sleep(100);
+                               
 
-                if(prev->key_num <=2 &&prev->key_num < next->key_num)
-                {
-                  //  printf("Come here impossible\n");
-                    // sleep(100);
+               // if(prev->key_num == next->key_num || prev->key_num > next->key_num})i
+               }*/
+                //else
+                { 
+                    Merge_Node(prev,Cur->key[0],Cur->child[1]);
+                   // printf("Cur->child[0] : %p\n",Cur->child[0]);
+                   // printf("Cur->child[1] : %p\n",Cur->child[1]);
 
-                    for(j=0; j<next->key_num; j++)
-                    {
-
-                        Merge_Node(Cur,next->key[j],next->child[j]);
-                    }
-
-                    Re_Delete(father,next->key[0]);
-
-                       free(next);
-                    if(father->isRoot && father->key_num == 0)
-                    {
-                        Root = father->child[0];
-                        Root->isRoot = true;
-                        Root->father = NULL;
-                        free(father);
-                    }
-                    return true;
-                }
-                
-
-               // if(prev->key_num == next->key_num || prev->key_num > next->key_num)
-                else
-                {
-                    //printf("hi\n");
-                    Merge_Node(prev,Cur->key[0],Cur->child[0]);
-                    t = Cur->child[0];
+                    t = Cur->child[1];
                     t->father = prev;
-                    //printf("what is t %p\n",t);
+                    //   Debug_Print(prev);
+                    // Debug_Print(Cur);
                     Move_key = Finding_Moving_Child(father,Cur);
-
                     BPlusTreeNode *child = Find_Child(Cur,Move_key);
                     child->father = prev;
-                    //printf("what is Move_key : %d\n",Move_key);
-                    //printf("what is child: %p\n",child);
+
+                    // printf("what is Move_key : %d\n",Move_key);
+                    //printf("child : %p\n",child);
                     Merge_Node(prev,Move_key,child);
                     Re_Delete(father,Move_key);
+
+                    // Debug_Print(prev);
+                    // Debug_Print(Cur);
+
+                    //sleep(1000);
+
+                    //  Re_Child(father,prev->key[prev->slot_array[1]],true);
+
                     prev->next = Cur->next;
-                      
                     free(Cur);
+
                     if(father->isRoot && father->key_num == 0)
                     {
                         Root = father->child[0];
@@ -628,11 +707,13 @@ int Merge(BPlusTreeNode *Cur)
 
 
 
-    }
+        }
 
     }
     else{
 /**********************/
+       // printf("Normal Merge!\n");
+
     if(index == 0){
 
         next = father->child[index+1];
@@ -643,7 +724,7 @@ int Merge(BPlusTreeNode *Cur)
 
         //printf("hi\n");
         //printf("Normal Merge!\n");
-        //printf("next: %d\n",next->key[next->slot_array[1]]);
+        //printf("next: %d\n",next->key[0]);
         //printf("next: %p\n",next);
         // Insert(next,Cur->key[Cur->slot_array[1]],Cur->child[Cur->slot_array[1]]);
         // Delete(father,next->key[next->slot_array[1]]);
@@ -654,8 +735,8 @@ int Merge(BPlusTreeNode *Cur)
         {
 
             Merge_Node(Cur,next->key[j],next->child[j]);
-            t = next->child[j];
-            t->father = Cur->father;
+           // t = next->child[j];
+           // t->father = Cur->father;
         }
         /* 
            for(j=0; j < Cur->key_num; j++)
@@ -671,10 +752,9 @@ int Merge(BPlusTreeNode *Cur)
         /*Adjusting the newnode child position in Non_leaf Node*/
         /*************************************************/
 
-
-        Merge_Node(father,Cur->key[0],Cur);
+        //Merge_Node(father,Cur->key[0],Cur);
        // Debug_Print(Cur);
-        Re_Delete(father,Cur->key[0]);
+        //Re_Delete(father,Cur->key[0]);
 
         //Debug_Print(Cur);
         /*Re_Delete Becase We keep the key number and child number +1 */
@@ -693,7 +773,8 @@ int Merge(BPlusTreeNode *Cur)
            {
 
            }*/
-        
+       
+       // printf("here\n");
         return true;
 
 
@@ -702,8 +783,8 @@ int Merge(BPlusTreeNode *Cur)
     else if(index == father->key_num)
     {
         //printf("Normal Merge!\n");
-        //printf("hi3\n");
-        if(index == 1)
+  //      printf("hi3\n");
+        if(index == 0)
         {
             prev = father->child[0];
         }
@@ -717,8 +798,8 @@ int Merge(BPlusTreeNode *Cur)
 
 
         Merge_Node(prev,Cur->key[0],Cur->child[0]);
-        t = Cur->child[0];
-        t->father = prev->father;
+     //   t = Cur->child[0];
+     //   t->father = prev->father;
         Re_Delete(father,Cur->key[0]);
 
 //        Debug_Print(prev);
@@ -741,8 +822,8 @@ int Merge(BPlusTreeNode *Cur)
     }
     else
     {   //printf("hi2\n"); 
-        //printf("Normal Merge!\n");
-        if(index == 1)
+       // printf("Normal Merge!\n");
+        if(index == 0)
         {
             prev = father->child[0];
         }
@@ -758,28 +839,54 @@ int Merge(BPlusTreeNode *Cur)
         //printf("prev->key_num : %d\n",prev->key_num);
         //printf("next->key_num : %d\n",next->key_num);
 
-        
-            if(prev->key_num <=2 && prev->key_num < next->key_num)
-            {
-                //printf("Impossible\n");
-                //sleep(100);
 
-            for(j=0; j<next->key_num; j++)
+        if(prev->key_num <=2 && prev->key_num < next->key_num)
+        {
+       //     printf("Imossible\n");
+         //   sleep(10);
+            for(j=0; j < next->key_num; j++)
             {
 
-            Merge_Node(Cur,next->key[j],next->child[j]);
-            Re_Delete(father,next->key[0]);
-            Cur->next = NULL;
+                Merge_Node(Cur,next->key[j],next->child[j]);
+                // t = next->child[j];
+                // t->father = Cur->father;
             }
+            /* 
+               for(j=0; j < Cur->key_num; j++)
+               {
+
+               printf("Cur key+:%d\n",Cur->key[Cur->slot_array[j+1]]);
+               }*/
+
             Re_Delete(father,next->key[0]);
+            //memmove(newnode,Cur,sizeof(struct WBPlusTreeNode));
+            //Insert(father,newnode->key[newnode->slot_array[1]],newnode);
+
+            /*Adjusting the newnode child position in Non_leaf Node*/
+            /*************************************************/
+
+            //Merge_Node(father,Cur->key[0],Cur);
+            // Debug_Print(Cur);
+            //Re_Delete(father,Cur->key[0]);
+
+            //Debug_Print(Cur);
+            /*Re_Delete Becase We keep the key number and child number +1 */
+            /************************************************/
+
+            Cur->next = next->next;
+            //
+
+
+            // Re_Delete(father,next->key[next->slot_array[1]]);
+
             free(next);
-            }
+        }
             //if(prev->key_num == next->key_num || prev->key_num > next->key_num)
             else
             {
                 Merge_Node(prev,Cur->key[0],Cur->child[0]);
-                t = Cur->child[0];
-                t->father = prev->father;
+              //  t = Cur->child[0];
+             //   t->father = prev->father;
                 Re_Delete(father,Cur->key[0]);
                 //Re_Child(father,Cur->key[Cur->slot_array[1]],false);
                 prev->next = Cur->next;
@@ -796,17 +903,40 @@ int Merge(BPlusTreeNode *Cur)
 }
 
 
-void replace(BPlusTreeNode *Cur,int key,unsigned char position)
+void replace(BPlusTreeNode *Cur,int key,unsigned char flag)
 {
-    int i = Binary_Search(Cur,key);
+    int i;
+    if(flag == 5)
+    {
+        /*Redistrubute for middle & next*/
+        i = Binary_Search(Cur,key);
+    Cur->key[i] = key;
+    return ;
+    }
+
+
+    if(key < Cur->key[0])
+        i = 0;
+    else
+    {
+        i= Binary_Search(Cur,key)+1;
+    }
+    if(flag == 2)
+    {
+        Cur->key[0] = key;
+        return;
+    }
     
+
     /*Because of Left/right overwrting must be diffrent*/
-    
+   
+   // printf("Cur->key[i] : %d\n",Cur->key[i+1]);
+   // printf("Cur-key_num :%d\n",Cur->key_num);
     Cur->key[i] = key;
     //printf("Replace !!\n");
 
     //printf("Replace i %d\n",i);
-    //printf("key :%d\n",key);
+   // printf("key :%d\n",key);
     
 
     
@@ -814,19 +944,25 @@ void replace(BPlusTreeNode *Cur,int key,unsigned char position)
 int Redistribute(BPlusTreeNode *Cur)
 {
     BPlusTreeNode *father = Cur->father;
-    int index = Binary_Search(father,Cur->key[0]);
-    int Root_up_key,Move_key;
+    int Root_up_key,Move_key,index;
     BPlusTreeNode *next,*prev,*child,*child2;
    // printf("Redistribute!!\n");
-     //       printf("index : %d\n",index);
 //    printf("father->key_num : %d\n",father->key_num);
 
   //  printf("cur key :%d\n",Cur->key[Cur->slot_array[1]]);
-  //  printf("father->key[0]: %d\n",father->key[father->slot_array[1]]);
-  //  printf("Cur->key[Cur->slot_array[0] : %d\n",Cur->key[Cur->slot_array[1]]);
+   // printf("father->key[0]: %d\n",father->key[0]);
+   // printf("Cur->key[0] : %d\n",Cur->key[0]);
 
+    if(father->key[0] > Cur->key[0])
+    {
+        index = 0;
+    }
+    else
+    {
+      index = Binary_Search(father,Cur->key[0])+1;
+    }
 
-
+           // printf("index : %d\n",index);
 
     if(Cur->isLeaf == false)
     {
@@ -834,7 +970,7 @@ int Redistribute(BPlusTreeNode *Cur)
         
         if(index == 0)
         {
-            //printf("hi\n");
+           // printf("Non_Leaf_distribute_hi\n");
             next = father->child[index+1];
             prev = NULL;
             if(next->key_num <= 2)
@@ -842,37 +978,28 @@ int Redistribute(BPlusTreeNode *Cur)
                 return false;
             }
             else
-            {
-                //printf("next :%d\n",next->key[next->slot_array[1]]);
-                
-                
-                 Move_key = Finding_Moving_Child(father,next);
-                 Root_up_key = next->key[0];
-
+            { 
+                int i,ins;
+                Move_key = Finding_Moving_Child(father,next);
+               // printf("Move_key : %d\n",Move_key);
                 child = Find_Child(next,Move_key);
-                                
-                //printf("Move_key : %d\n",Move_key);
                 child->father = Cur;
-               // printf("Cur : %p\n",Cur);
-               // printf("child : %p\n",child);
-                //printf("child->father : %p\n",child->father);
                 Merge_Node(Cur,Move_key,child);
-               // printf("child key : %d\n",child->key[child->slot_array[1]]);
-                
-                child2 = Find_Child(next,Root_up_key);
-                //printf("Root_up_key : %d\n",Root_up_key);
-               // printf("child2 : %p\n",child2);
-                child2->father = next;
-                Re_Delete(next,next->key[0]);
-                Merge_Node(next,Root_up_key,child2);
-                //Debug_Print(next);
-                replace(father,next->key[0],3);
-                Re_Delete(next,next->key[0]);
-               // Debug_Print(next);
 
-               
-                //printf("next->slot_array[1]] :%d\n",next->key[next->slot_array[1]]);
-                
+                Root_up_key = next->key[0];
+
+                replace(father,Root_up_key,5);
+
+                ins = Binary_Search(next,Root_up_key);
+                for(i=ins; i<next->key_num-1; i++)
+                {
+                    next->key[i] = next->key[i+1];
+                    next->child[i] = next->child[i+1];
+                }
+                next->child[i] = next->child[i+1];
+                next->key_num = next->key_num - 1;
+
+
                 return true;
             }
         }
@@ -880,11 +1007,11 @@ int Redistribute(BPlusTreeNode *Cur)
         {
            // printf("hi1\n");
 
-           // sleep(10);
+            // sleep(10);
 
             if(index == 0)
             {
-                
+
                 prev = father->child[0];
             }
             else
@@ -893,42 +1020,40 @@ int Redistribute(BPlusTreeNode *Cur)
             }
             next = NULL;
 
-            //printf("father key : %d\n",father->key[father->slot_array[1]]);
-            //printf("prev :%d\n",prev->key[prev->slot_array[1]]);
+           // printf("father key : %d\n",father->key[0]);
+           // printf("prev :%d\n",prev->key[0]);
 
             if(prev->key_num  <= 2)
                 return false;
             else
             {
 
-                //printf("what is i : %d\n",i);
-                //
-                //replace(Cur,father->key[father->slot_array[1]],3);
-                //replace(father,prev->key[prev->slot_array[prev->key_num]],4);
-
                 Root_up_key = Finding_Moving_Child(father,Cur);
-                child = Find_Child(Cur,Root_up_key);
-                child->father = Cur;
-                
-                Move_key = prev->key[prev->key_num];
+               // printf("Root_up_key: %d\n",Root_up_key);
+                // child = Cur->child[0];
+                // printf("child->key[0] : %dd\n",child->key[0]);
+
+                // child = Find_Child(Cur,Root_up_key);
+                // child->father = Cur;
+                // Merge_Node(Cur,Root_up_key,child);
+
+
+                Move_key = prev->key[prev->key_num-1];
+               // printf("Move_key :%d\n",Move_key);
                 child2 = Find_Child(prev,Move_key);
                 child2->father = Cur;
-                
-                Merge_Node(Cur,Move_key,child2);
-                Merge_Node(Cur,Root_up_key,child);
+                Merge_Node(Cur,Root_up_key,child2);
 
 
-               
 
-                Re_Delete(Cur,Move_key);
-                replace(father,Move_key,4);
                 Re_Delete(prev,Move_key);
-            
-               // printf("%d\n",father->key[father->slot_array[1]]);
-              //  WBPlusTreeNode *n = Cur->child[n->slot_array[in]+1];
-                //printf("key : %d\n",n->key[n->slot_array[1]]);
-               // Re_Delete(prev,prev->key[prev->slot_array[prev->key_num]]);
-                // Insert(father,prev->key[prev->slot_array[prev->key_num]],Cur);
+                // Re_Delete(Cur,Move_key);
+
+
+                replace(father,Move_key,3);
+
+
+
 
 
                 return true;
@@ -936,7 +1061,7 @@ int Redistribute(BPlusTreeNode *Cur)
         }
         else
         {
-            //printf("hi2\n");
+           // printf("hi2\n");
             if(index == 0)
             {
                 prev = father->child[0];
@@ -948,34 +1073,38 @@ int Redistribute(BPlusTreeNode *Cur)
 
             next = father->child[index+1];
 
-            //printf("prev :%d\n",prev->key[prev->slot_array[1]]);
-            //printf("next :%d\n",next->key[next->slot_array[1]]);
+           // printf("prev :%d\n",prev->key[0]);
+           // printf("next :%d\n",next->key[0]);
             if(prev->key_num <= 2 && next->key_num <= 2)
                 return false;
             else
             {
                 if(prev->key_num <=2 && prev->key_num < next->key_num)
                 {
-                    //printf("wow\n");
+                    int i,ins;
+                   // printf("wow\n");
                     Move_key = Finding_Moving_Child(father,next);
+                  //  printf("Move_key : %d\n",Move_key);
                     child = Find_Child(next,Move_key);
                     child->father = Cur;
                     Merge_Node(Cur,Move_key,child);
  
                     Root_up_key = next->key[0];
                    
-                    replace(father,next->key[0],3);
+                    replace(father,Root_up_key,5);
 
-                    child2 = Find_Child(next,Root_up_key);
-                    child2->father = next;
-                    
-                    Re_Delete(next,next->key[0]);
-                    Merge_Node(next,Root_up_key,child2);
-                    Re_Delete(next,next->key[0]);
-                    
-                    
-                   // printf("next->key[next->slot_array[1] : %d\n",next->key[next->slot_array[1]]);
-                   // printf("Move_key : %d\n",Move_key);
+                    ins = Binary_Search(next,Root_up_key);
+                    for(i=ins; i<next->key_num-1; i++)
+                    {
+                        next->key[i] = next->key[i+1];
+                        next->child[i] = next->child[i+1];
+                    }
+                        next->child[i] = next->child[i+1];
+                    next->key_num = next->key_num - 1;
+
+
+                    // printf("next->key[next->slot_array[1] : %d\n",next->key[next->slot_array[1]]);
+                    // printf("Move_key : %d\n",Move_key);
                     return true;
                 }
                 else
@@ -987,28 +1116,32 @@ int Redistribute(BPlusTreeNode *Cur)
                     //replace(father,prev->key[prev->slot_array[prev->key_num]],4);
                     //Re_Delete(prev,prev->key[prev->slot_array[prev->key_num]]);
 
-          
+         
+               // printf("Cur->key[0]---: %id\n",Cur->key[0]);
 
                      Root_up_key = Finding_Moving_Child(father,Cur);
+                       // printf("Root_up_key: %d\n",Root_up_key);
+                       // child = Cur->child[0];
+                       // printf("child->key[0] : %dd\n",child->key[0]);
 
-
-                    child = Find_Child(Cur,Root_up_key);
-                    child->father = Cur;
+                   // child = Find_Child(Cur,Root_up_key);
+                   // child->father = Cur;
                    // Merge_Node(Cur,Root_up_key,child);
 
 
-                     Move_key = prev->key[prev->key_num];
-                 //   printf("Move_key :%d\n",Move_key);
+                     Move_key = prev->key[prev->key_num-1];
+                  // printf("Move_key :%d\n",Move_key);
                     child2 = Find_Child(prev,Move_key);
                     child2->father = Cur;
-                    Merge_Node(Cur,Move_key,child2);
-                    Merge_Node(Cur,Root_up_key,child);
+                    Merge_Node(Cur,Root_up_key,child2);
+                  
+
 
                     Re_Delete(prev,Move_key);
-                    Re_Delete(Cur,Move_key);
+                   // Re_Delete(Cur,Move_key);
 
 
-                    replace(father,Move_key,4);
+                    replace(father,Move_key,3);
 
 
 
@@ -1031,9 +1164,11 @@ int Redistribute(BPlusTreeNode *Cur)
 
         next = father->child[index+1];
         prev = NULL;
-        //printf("next->key %d\n",next->key[next->slot_array[1]]);
+        //printf("next->key %d\n",next->key[0]);
+        //printf("next->key_num : %d\n",next->key_num);
         if(next->key_num <= 2)
         {
+         //   printf("out\n");
             return false;
         }
         else
@@ -1042,13 +1177,13 @@ int Redistribute(BPlusTreeNode *Cur)
 
             Merge_Node(Cur,next->key[0],next->child[0]);
             Re_Delete(next,next->key[0]);
-            replace(father,next->key[0],3);
+            replace(father,next->key[0],2);
             return true;
         }
     }
     else if(index == father->key_num)
     {
-       // printf("hi1\n");
+//        printf("hi1\n");
 
 
         if(index == 0)
@@ -1075,9 +1210,9 @@ int Redistribute(BPlusTreeNode *Cur)
          //   printf("hi error!!\n");
 
             
-            Merge_Node(Cur,prev->key[prev->key_num],prev->child[prev->key_num]);
-            replace(father,prev->key[prev->key_num],4);
-            Re_Delete(prev,prev->key[prev->key_num]);
+            Merge_Node(Cur,prev->key[prev->key_num-1],prev->child[prev->key_num-1]);
+            replace(father,prev->key[prev->key_num-1],4);
+            Re_Delete(prev,prev->key[prev->key_num-1]);
             // Insert(father,prev->key[prev->slot_array[prev->key_num]],Cur);
 
 
@@ -1086,7 +1221,8 @@ int Redistribute(BPlusTreeNode *Cur)
     }
     else
     {
-        //printf("hi2\n");
+       // printf("hi2\n");
+       // printf("index: %d\n",index);
         if(index == 0)
         {
             prev = father->child[0];
@@ -1098,21 +1234,22 @@ int Redistribute(BPlusTreeNode *Cur)
 
         next = father->child[index+1];
        // next = Cur->next;
-       // printf("prev :%d\n",prev->key[prev->slot_array[1]]);
-       // printf("next :%d\n",next->key[next->slot_array[1]]);
+       // printf("prev :%d\n",prev->key[0]);
+       // printf("next :%d\n",next->key[0]);
         if(prev->key_num <= 2 && next->key_num <= 2)
             return false;
         else
         {
             if(prev->key_num == 2 && prev->key_num < next->key_num)
             {
-                //sleep(10);
+               // printf("insight\n");
+               // sleep(10);
                 //Debug_Print(Cur);
                 //Debug_Print(next);
                 Merge_Node(Cur,next->key[0],next->child[0]);
-                replace(father,next->key[1],3);
-                Re_Delete(next,next->key[0]);
-                //Debug_Print(Cur);
+            Re_Delete(next,next->key[0]);
+
+            replace(father,next->key[0],5);
                 //Debug_Print(next);
 
                 
@@ -1120,10 +1257,11 @@ int Redistribute(BPlusTreeNode *Cur)
             else
             {
                 //printf("Here\n");
-                Merge_Node(Cur,prev->key[prev->key_num],prev->child[prev->key_num]);
+      //          printf("prev->key: %d\n",prev->key[prev->key_num-1]);
+                Merge_Node(Cur,prev->key[prev->key_num-1],prev->child[prev->key_num-1]);
                 //Re_Delete(prev,prev->key[prev->slot_array[prev->key_num]]);
-                replace(father,prev->key[prev->key_num],4);
-                Re_Delete(prev,prev->key[prev->key_num]);
+                replace(father,prev->key[prev->key_num-1],4);
+                Re_Delete(prev,prev->key[prev->key_num-1]);
                 return true;
             }
 
@@ -1145,19 +1283,19 @@ int Redistribute(BPlusTreeNode *Cur)
 
 }
 BPlusTreeNode* Find(int key, int modify) {
-	BPlusTreeNode* Cur = Root;
-	while (1) {
-		if (Cur->isLeaf == true)
-			break;
-		if (key < Cur->key[0]) {
-			Cur = Cur->child[0];
-		} else {
-			int i = Binary_Search(Cur, key);
-                       // printf("what is i : %d\n",i);
-                       			Cur = Cur->child[i+1];
-                        		}
-	}
-	return Cur;
+    BPlusTreeNode* Cur = Root;
+    while (1) {
+        if (Cur->isLeaf == true)
+            break;
+        if (key < Cur->key[0]) {
+            Cur = Cur->child[0];
+        } else {
+            int i = Binary_Search(Cur, key);
+            // printf("what is i : %d\n",i);
+            Cur = Cur->child[i+1];
+        }
+    }
+    return Cur;
 }
 
 /** Destroy subtree whose root is Cur, By recursion */

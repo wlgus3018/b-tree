@@ -146,15 +146,26 @@ inline long long unsigned int Read_Data_And_Delete(char* buffer) {
         while (cur < fsize && buffer[cur] != '\n') {
             new_st[new_len++] = buffer[cur++];
         }
+      //  printf("----new_key : %d------\n",new_key);
         clock_gettime(CLOCK_REALTIME,&start);
         ret = BPlusTree_Delete(new_key);
         clock_gettime(CLOCK_REALTIME,&end);
         diff_time = BILLION * (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec);
         total += diff_time;
-        if(ret == -2){
+       /* 
+        if(count ==127)
+        {
+            
+            return;
+        }*/
+        
+        
+            if(ret == -2){
+
             count++;
             continue;
         }
+
 
 
 
@@ -258,7 +269,7 @@ void MainLoop() {
                         diff_time = BILLION * (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec);
                         total += diff_time;
 
-                      //  BPlusTree_Print();
+                       // BPlusTree_Print();
 
                         printf("Valid Records inserted on B+tree = %d\n", validRecords);
                         printf("Total number of B+tree nodes = %d\n", BPlusTree_GetTotalNodes());
@@ -345,6 +356,7 @@ void MainLoop() {
 
                        buffer2 = Read_Buffer(buffer2,input_file2);
                        total = Read_Data_And_Delete(buffer2);
+            //            BPlusTree_Print();
                        printf("Total time costs %llu ms\n",total /1000000);
                        break;
 
