@@ -12,6 +12,16 @@ int TotalNodes;
 
 int QueryAnsNum;
 
+void clflush(volatile void *p)
+{
+    asm volatile("clflush (%0)" :: "r"(p));
+}
+void mfence(void)
+{
+    asm volatile("mfence" ::: "memory");
+}
+
+
 /** Create a new B+tree Node */
 BPlusTreeNode* New_BPlusTreeNode() {
 	struct BPlusTreeNode* p = (struct BPlusTreeNode*)malloc(sizeof(struct BPlusTreeNode));
@@ -25,7 +35,14 @@ BPlusTreeNode* New_BPlusTreeNode() {
 	TotalNodes++;
 	return p;
 }
+void Logging(BPlusTreeNode *Cur)
+{
+    clflush(&Cur); mfence();
 
+    BPlusTreeNode *log = New_BPlusTreeNode();
+    memcpy(log,Cur,sizeof(struct BPlusTreeNode));
+    clflush(&log); mfence();
+}
 /** Binary search to find the biggest child l that Cur->key[l] <= key */
 inline int Binary_Search(BPlusTreeNode* Cur, int key) {
 	int l = 0, r = Cur->key_num;
@@ -1327,6 +1344,7 @@ void Print(BPlusTreeNode* Cur) {
 /** Interface: Insert (key, value) into B+tree */
 int BPlusTree_Insert(int key, int pos, void* value) {
 	BPlusTreeNode* Leaf = Find(key, true);
+       // Logging(Leaf);
 	int i = Binary_Search(Leaf, key);
 	if (Leaf->key[i] == key) return false;
 	Insert(Leaf, key, pos, value);
