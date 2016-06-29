@@ -76,7 +76,8 @@ void Split(BPlusTreeNode* Cur) {
 	Temp->isLeaf = Cur->isLeaf; // Temp's depth == Cur's depth
 	int i;
         int M_key = Cur->key[Mid];
-
+        
+        Logging(Cur);
         if(Cur->isLeaf == false)
         {
         //    printf("hi!\n");
@@ -109,6 +110,9 @@ void Split(BPlusTreeNode* Cur) {
         // Insert Temp
         if (Cur->isRoot) {
             // Create a new Root, the depth of Tree is increased
+            Logging(Cur);
+            Logging(Temp);
+
             Root = New_BPlusTreeNode();
             Root->key_num = 1;
             Root->isRoot = true;
@@ -135,7 +139,7 @@ void Delete(BPlusTreeNode*, int);
 void Insert(BPlusTreeNode* Cur, int key, int pos, void* value) {
     int i, ins;
 
-
+    Logging(Cur);
     if (key < Cur->key[0]) ins = 0; else ins = Binary_Search(Cur, key) + 1;
     if(Cur->isLeaf)
     {

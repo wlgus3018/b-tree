@@ -11,7 +11,7 @@ typedef struct BPlusTreeNode {
 	struct BPlusTreeNode* father;
 	struct BPlusTreeNode* next;
 	struct BPlusTreeNode* last;
-        int unused[17];
+        int unused[22];
 } BPlusTreeNode;
 
 extern void BPlusTree_SetMaxChildNumber(int);
